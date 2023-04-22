@@ -14,20 +14,21 @@ import logging
 
 from pathlib import Path
 import mysql.connector as mysql
-from dotenv import load_dotenv,dotenv_values
+from dotenv import load_dotenv
 
-os.chdir(Path("E:/E2E_DTP_Project"))
+import pandas as pd
+import numpy as np
 
+# os.chdir(Path("E:/E2E_DTP_Project"))
+#Path("E:/E2E_DTP_Project")
 
 logging.basicConfig(filename='myapp.log',
                     format='%(asctime)s %(message)s', 
                     level=logging.INFO)
 
-env = Path(".env")
+env = Path(".env.txt")
 load_dotenv(dotenv_path=env)
 
-from dotenv import load_dotenv
-load_dotenv()
 
 def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, str]:
     """this function connects to mysql database and returns conn, cur as tuple
@@ -43,7 +44,7 @@ def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, 
         logging.info('Started')
         conn = mysql.connect(host=host,
                             user=user,
-                            password="12345")
+                            password=os.getenv("PASSWORD"))
         cur = conn.cursor()
         logging.info("Connected to MySQL successfully!")
         logging.info('ended')
@@ -53,8 +54,8 @@ def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, 
 
 conn, cur = connect_db(host="localhost", user="root")
 
-import pandas as pd
-import numpy as np
+
+
 
 sample_data_df = pd.read_excel( 'sample_data_mysql.xlsx', sheet_name= "sample_data" )
 sample_data_df.head(5)
@@ -86,24 +87,7 @@ def python_df_to_sql_table(dataframe):
     return coltypes, values
 
 coltype, values = python_df_to_sql_table(sample_data_df)   
-'''
-types1 =[]
-for type in sample_data_df.dtypes:
-    if type == "object":
-        types1.append("VARCHAR(255)")
-    elif type == "float64":
-        types1.append("FLOAT")
-    elif type == 'int64':
-        types1.append("INT")   
-        
-types1 
-coltypes = list(zip(sample_data_df.columns, types1)) 
-coltypes  
-coltypes = tuple([' '.join(i) for i in coltypes])
-coltypes 
-coltypes = ', '.join(coltypes)
-coltypes
-'''
+
 
 # for step 5
 cur.execute("use sample_data_upload")
