@@ -169,6 +169,7 @@ def create_table_in_sql(database_name: str, table_name: str, dataframe: str):
     cur.execute(f"CREATE TABLE {table_name} ({col_type}")
     cur.execute("SHOW TABLES")
     tables = cur.fetchall()
+    return tables
 
 
    
