@@ -29,7 +29,7 @@ logging.basicConfig(filename='myapp.log',
 env = Path(".env.txt")
 load_dotenv(dotenv_path=env)
 
-
+# STEP 1
 def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, str]:
     """this function connects to mysql database and returns conn, cur as tuple
 
@@ -56,20 +56,16 @@ conn, cur = connect_db(host="localhost", user="root")
 
 
 
-
+# STEP 2 CREATE A FUNCTION: GET_DATA OR READ_DATA
 sample_data_df = pd.read_excel( 'sample_data_mysql.xlsx', sheet_name= "sample_data" )
 sample_data_df.head(5)
 
-
-cur.execute("SHOW DATABASES")
-
-for x in cur:
-  print(x)
-  
+# STEP 3 CREATE FUNCTION CREATE DATABASE - RETURNS DATABASES
 cur.execute("CREATE DATABASE sample_data_upload")
-cur.execute("use sample_data_upload")
-cur.execute("CREATE TABLE sample_data_table (sl_no int,cust_id  VARCHAR(255) PRIMARY KEY, region VARCHAR(255), date DATE)")
+cur.execute("SHOW DATABASES")
+databases = cur.fetchall()
 
+# STEP 4
 def python_df_to_sql_table(dataframe):
     types =[]
     for type in dataframe.dtypes:
@@ -86,19 +82,26 @@ def python_df_to_sql_table(dataframe):
     values = ', '.join(["%s" for i in range(len(dataframe.columns))])
     return coltypes, values
 
-coltype, values = python_df_to_sql_table(sample_data_df)   
+coltype, values = python_df_to_sql_table(sample_data_df)
 
-
-# for step 5
+# STEP 5 CREATE FUNCTION CREATE_TABLE - NO RETURN
 cur.execute("use sample_data_upload")
-for i, row in sample_data_df.iterrows():
-    
+cur.execute("CREATE TABLE sample_data_table (sl_no int,cust_id  VARCHAR(255) PRIMARY KEY, region VARCHAR(255), date DATE)")
+
+
+
+   
+
+
+# for step 6
+
+for i, row in sample_data_df.iterrows():    
     sql = f"INSERT INTO sample_data_table VALUES ({values})"
     cur.execute(sql, tuple(row))
     conn.commit()
+cur.close()
+conn.close()
     
- 
-
 cur.execute("SELECT * FROM sample_data_table")
 myresult = cur.fetchall()
 myresult 
