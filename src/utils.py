@@ -53,8 +53,8 @@ def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, 
     return conn, cur
     
 conn, cur = connect_db(host="localhost", user="root")
-conn.close()
 cur.close()
+conn.close()
 
 
 
@@ -103,6 +103,8 @@ def create_database(database_name: str):
     cur.execute(f"CREATE DATABASE {database_name}")
     cur.execute("SHOW DATABASES")
     databases = cur.fetchall()
+    cur.close()
+    conn.close()
     return databases
 
 # # STEP 4
@@ -166,9 +168,11 @@ def create_table_in_sql(database_name: str, table_name: str, dataframe: str):
     coltype, values = python_df_to_sql_table(dataframe)
     
     cur.execute(f"use {database_name}")
-    cur.execute(f"CREATE TABLE {table_name} ({col_type}")
+    cur.execute(f"CREATE TABLE {table_name} ({coltype}")
     cur.execute("SHOW TABLES")
     tables = cur.fetchall()
+    cur.close()
+    conn.close()
     return tables
 
 
@@ -200,12 +204,10 @@ def python_to_sql_data_transfer_func(dataframe: str, table_name: str):
         sql = f"INSERT INTO {table_name} VALUES ({values})"
         cur.execute(sql, tuple(row))
         conn.commit()
-    cur.close()
-    conn.close()
         
     cur.execute(f"SELECT * FROM {table_name}")
     myresult = cur.fetchall()
-    myresult 
-    
     for x in myresult:
       print(x)
+    cur.close()
+    conn.close()
