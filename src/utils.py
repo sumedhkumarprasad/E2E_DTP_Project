@@ -7,27 +7,23 @@ Created on Sun Apr 16 19:12:51 2023
 utils code
 """
 
-from typing import List, Tuple
-import os
-from os.path import join, dirname
 import logging
-
+import os
 from pathlib import Path
+from typing import List, Tuple
+
 import mysql.connector as mysql
-from dotenv import load_dotenv
-
 import pandas as pd
-import numpy as np
+from dotenv import load_dotenv
+import sys
 
-# os.chdir(Path("E:/E2E_DTP_Project"))
-#Path("E:/E2E_DTP_Project")
+sys.dont_write_bytecode = True
+
 
 logging.basicConfig(filename='myapp.log',
                     format='%(asctime)s %(message)s', 
                     level=logging.INFO)
 
-env = Path("src/.env")
-load_dotenv(dotenv_path=env)
 
 # STEP 1
 def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, str]:
@@ -52,13 +48,6 @@ def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, 
         logging.debug(e)
     return conn, cur
     
-conn, cur = connect_db(host="localhost", user="root")
-cur.close()
-conn.close()
-
-
-
-
 
 # # STEP 2 CREATE A FUNCTION: GET_DATA OR READ_DATA
 # Filename argurment
@@ -79,12 +68,13 @@ def read_data(filename: str) -> pd.DataFrame:
 
     '''
     df = pd.read_csv(filename)
+    df.drop(columns = ['Unnamed: 0'], inplace = True, errors = 'ignore')
     return df
 
 
 # # STEP 3 CREATE FUNCTION CREATE DATABASE - RETURNS DATABASES
 # database name 
-def create_database(database_name: str): 
+def create_database(database_name: str, cur: str): 
     '''
     This function will create the database and will return list of all databases
     
@@ -99,16 +89,15 @@ def create_database(database_name: str):
         DESCRIPTION.
 
     '''
-    conn, cur = connect_db(host="localhost", user="root")
+    cur.execute(f'DROP DATABASE IF EXISTS {database_name}')
     cur.execute(f"CREATE DATABASE {database_name}")
     cur.execute("SHOW DATABASES")
     databases = cur.fetchall()
-    cur.close()
-    conn.close()
     return databases
 
+
 # # STEP 4
-def python_df_to_sql_table(dataframe: str) ->  pd.DataFrame :
+def python_df_to_sql_table(dataframe: pd.DataFrame) -> Tuple[str, str]:
     '''
     This function will used to create the  table structure from Python dataframe to SQL table
     coltype will return 'colname datatype'
@@ -130,24 +119,22 @@ def python_df_to_sql_table(dataframe: str) ->  pd.DataFrame :
     '''
     types =[]
     for type in dataframe.dtypes:
-        if type == "object":
-            types.append("VARCHAR(255)")
-        elif type == "float64":
-            types.append("FLOAT")
+        if type == 'object':
+            types.append('VARCHAR(255)')
+        elif type == 'float64':
+            types.append('FLOAT')
         elif type == 'int64':
-            types.append("INT")
+            types.append('INT')
 
-    coltypes = list(zip(dataframe.columns, types))
-    coltypes = tuple([' '.join(i) for i in coltypes])
-    coltypes = ', '.join(coltypes)
-    values = ', '.join(["%s" for i in range(len(dataframe.columns))])
+    coltypes = list(zip(dataframe.columns.values, types))
+    coltypes = tuple([" ".join(i) for i in coltypes])
+    coltypes = ", ".join(coltypes)
+    values = ', '.join(['%s' for _ in range(len(dataframe.columns))])
     return coltypes, values
-
-coltype, values = python_df_to_sql_table(dataframe)
 
 
 # # STEP 5 CREATE FUNCTION CREATE_TABLE - NO RETURN
-def create_table_in_sql(database_name: str, table_name: str, dataframe: str):
+def create_table_in_sql(database_name: str, table_name: str, coltype: str, cur: mysql.cursor.MySQLCursor):
     '''
     This function will create the datbase
      
@@ -162,26 +149,17 @@ def create_table_in_sql(database_name: str, table_name: str, dataframe: str):
     -------
     It will create table inside the database
 
-    '''
-    conn, cur = connect_db(host="localhost", user="root")
-    
-    coltype, values = python_df_to_sql_table(dataframe)
-    
-    cur.execute(f"use {database_name}")
-    cur.execute(f"CREATE TABLE {table_name} ({coltype}")
+    '''    
+    cur.execute(f"USE {database_name}")
+    cur.execute(f'DROP TABLE IF EXISTS {table_name}')
+    cur.execute(f"CREATE TABLE {table_name} ({coltype})")
     cur.execute("SHOW TABLES")
     tables = cur.fetchall()
-    cur.close()
-    conn.close()
     return tables
 
 
-   
-
-
 # Step 6
-
-def python_to_sql_data_transfer_func(dataframe: str, table_name: str):
+def insert_data(dataframe: str, table_name: str, values: str, cur: str, conn: str):
     '''
     Passing  the data from python datframe to sql table
 
@@ -197,17 +175,13 @@ def python_to_sql_data_transfer_func(dataframe: str, table_name: str):
     None.
 
     '''
-    conn, cur = connect_db(host="localhost", user="root")
-    coltype, values = python_df_to_sql_table(dataframe)
-    
-    for i, row in dataframe.iterrows():    
+    for _, row in dataframe.iterrows():    
         sql = f"INSERT INTO {table_name} VALUES ({values})"
         cur.execute(sql, tuple(row))
         conn.commit()
         
     cur.execute(f"SELECT * FROM {table_name}")
     myresult = cur.fetchall()
-    for x in myresult:
-      print(x)
-    cur.close()
-    conn.close()
+    print(len(myresult))
+
+    
