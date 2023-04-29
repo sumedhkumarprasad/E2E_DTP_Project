@@ -37,13 +37,13 @@ def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, 
         Tuple[mysql.connection.MySQLConnection, str]: 
     """
     try:
-        logging.info('Started')
+        logging.info('Started MySQl Connection Started')
         conn = mysql.connect(host=host,
                             user=user,
                             password=os.getenv("PASSWORD"))
         cur = conn.cursor()
         logging.info("Connected to MySQL successfully!")
-        logging.info('ended')
+        logging.info('Ended MySQl Connection Started')
     except Exception as e:
         logging.debug(e)
     return conn, cur
@@ -67,8 +67,15 @@ def read_data(filename: str) -> pd.DataFrame:
     - pandas.DataFrame: A DataFrame containing the data from the CSV file.
 
     '''
-    df = pd.read_csv(filename)
-    df.drop(columns = ['Unnamed: 0'], inplace = True, errors = 'ignore')
+    try:
+        logging.info('Started  reading csv format file')
+        df = pd.read_csv(filename)
+        df.drop(columns = ['Unnamed: 0'], inplace = True, errors = 'ignore')
+        logging.info("Read CSV File successfully!")
+        logging.info('Ended reading csv format file')
+    except Exception as e:
+        logging.debug(e)
+        
     return df
 
 
@@ -89,10 +96,17 @@ def create_database(database_name: str, cur: str):
         DESCRIPTION.
 
     '''
-    cur.execute(f'DROP DATABASE IF EXISTS {database_name}')
-    cur.execute(f"CREATE DATABASE {database_name}")
-    cur.execute("SHOW DATABASES")
-    databases = cur.fetchall()
+    try:
+        logging.info('Started  creating database')
+        cur.execute(f'DROP DATABASE IF EXISTS {database_name}')
+        cur.execute(f"CREATE DATABASE {database_name}")
+        cur.execute("SHOW DATABASES")
+        databases = cur.fetchall()
+        logging.info("Created Databse successfully!")
+        logging.info('Ended creating database')
+    except Exception as e:
+         logging.debug(e)
+         
     return databases
 
 
@@ -117,19 +131,27 @@ def python_df_to_sql_table(dataframe: pd.DataFrame) -> Tuple[str, str]:
         Placeholder return. No of columns will equal no of place holder 
 
     '''
-    types =[]
-    for type in dataframe.dtypes:
-        if type == 'object':
-            types.append('VARCHAR(255)')
-        elif type == 'float64':
-            types.append('FLOAT')
-        elif type == 'int64':
-            types.append('INT')
-
-    coltypes = list(zip(dataframe.columns.values, types))
-    coltypes = tuple([" ".join(i) for i in coltypes])
-    coltypes = ", ".join(coltypes)
-    values = ', '.join(['%s' for _ in range(len(dataframe.columns))])
+    try:
+        logging.info('Started  python to sql data type conversion')
+        types =[]
+        for type in dataframe.dtypes:
+            if type == 'object':
+                types.append('VARCHAR(255)')
+            elif type == 'float64':
+                types.append('FLOAT')
+            elif type == 'int64':
+                types.append('INT')
+    
+        coltypes = list(zip(dataframe.columns.values, types))
+        coltypes = tuple([" ".join(i) for i in coltypes])
+        coltypes = ", ".join(coltypes)
+        values = ', '.join(['%s' for _ in range(len(dataframe.columns))])
+        logging.info("Created tuple of column and datatype for creating table in SQl")
+        logging.info('Ended  python to sql data type conversion')
+        
+    except Exception as e:
+         logging.debug(e)
+    
     return coltypes, values
 
 
@@ -149,12 +171,19 @@ def create_table_in_sql(database_name: str, table_name: str, coltype: str, cur: 
     -------
     It will create table inside the database
 
-    '''    
-    cur.execute(f"USE {database_name}")
-    cur.execute(f'DROP TABLE IF EXISTS {table_name}')
-    cur.execute(f"CREATE TABLE {table_name} ({coltype})")
-    cur.execute("SHOW TABLES")
-    tables = cur.fetchall()
+    ''' 
+    try:
+        logging.info('Started creating table in the databse')
+        cur.execute(f"USE {database_name}")
+        cur.execute(f'DROP TABLE IF EXISTS {table_name}')
+        cur.execute(f"CREATE TABLE {table_name} ({coltype})")
+        cur.execute("SHOW TABLES")
+        tables = cur.fetchall()
+        logging.info('Created table in the databse')
+        logging.info('Ended creating table in the databse')
+    except Exception as e:
+         logging.debug(e)
+         
     return tables
 
 
@@ -175,10 +204,16 @@ def insert_data(dataframe: str, table_name: str, values: str, cur: str, conn: st
     None.
 
     '''
-    for _, row in dataframe.iterrows():    
-        sql = f"INSERT INTO {table_name} VALUES ({values})"
-        cur.execute(sql, tuple(row))
-        conn.commit()
+    try:
+        logging.info('Started putting python dataframe data into mysql db data')
+        for _, row in dataframe.iterrows():    
+            sql = f"INSERT INTO {table_name} VALUES ({values})"
+            cur.execute(sql, tuple(row))
+            conn.commit()
+        logging.info('Putted the data into SQl table successfully')
+        logging.info('Ended putting python dataframe data into mysql db data')
+    except Exception as e:
+        logging.debug(e)
         
     cur.execute(f"SELECT * FROM {table_name}")
     myresult = cur.fetchall()
