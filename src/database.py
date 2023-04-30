@@ -22,7 +22,7 @@ env = Path("src/.env")
 load_dotenv(dotenv_path=env)
 
 # step 1: connect to database
-conn, cur = connect_db(host= args.hosts_name, user= args.user_name)
+conn, cur = connect_db(host= args.host_name, user= args.user_name)
 
 # step 2: read dataset
 # df = read_data(filename= parser['file_path'])
@@ -33,8 +33,8 @@ conn, cur = connect_db(host= args.hosts_name, user= args.user_name)
 # database = True
 
 if args.create_db:
-    databases = create_database(database_name= args.dbname , cur= cur)
-    print(databases)
+     create_database(database_name= args.dbname , cur= cur)
+   
 else:
     df = read_data(filename= args.file_path)
     df.columns

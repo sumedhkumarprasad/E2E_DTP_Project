@@ -104,10 +104,11 @@ def create_database(database_name: str, cur: str):
         databases = cur.fetchall()
         logging.info("Created Databse successfully!")
         logging.info('Ended creating database')
+        print(databases)
     except Exception as e:
          logging.debug(e)
          
-    return databases
+    
 
 
 # # STEP 4
