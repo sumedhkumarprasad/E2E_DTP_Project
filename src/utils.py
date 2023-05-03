@@ -206,16 +206,20 @@ def insert_data(dataframe: str, table_name: str, values: str, cur: str, conn: st
     '''
     try:
         logging.info('Started putting python dataframe data into mysql db data')
-        for _, row in dataframe.iterrows():    
+        # cur.execute(f"USE {database_name}")
+        for _, row in dataframe.iterrows(): 
             sql = f"INSERT INTO {table_name} VALUES ({values})"
             cur.execute(sql, tuple(row))
             conn.commit()
         logging.info('Putted the data into SQl table successfully')
         logging.info('Ended putting python dataframe data into mysql db data')
+        
+        cur.execute(f"SELECT * FROM {table_name}")
+        myresult = cur.fetchall()
+        print(len(myresult))
     except Exception as e:
         logging.debug(e)
         
-    cur.execute(f"SELECT * FROM {table_name}")
-    myresult = cur.fetchall()
-    print(len(myresult))
+   
     
+

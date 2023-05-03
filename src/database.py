@@ -25,20 +25,19 @@ load_dotenv(dotenv_path=env)
 conn, cur = connect_db(host= args.host_name, user= args.user_name)
 
 # step 2: read dataset
-# df = read_data(filename= parser['file_path'])
-
-
-
-# step 2: either create database or use existing database
-# database = True
 
 if args.create_db:
-     create_database(database_name= args.dbname , cur= cur)
+     create_database(database_name= args.database_name, cur= cur)
    
 else:
     df = read_data(filename= args.file_path)
     print(df.columns)
     coltype, values = python_df_to_sql_table(df)
-    create_table_in_sql(database_name= args.dbname, table_name=  args.tname, coltype=coltype, cur=cur)
-    insert_data(dataframe=df, table_name= args.tname, values=values, cur=cur, conn=conn)
+    create_table_in_sql(database_name= args.database_name, table_name=  args.table_name, coltype=coltype, cur=cur)
+    insert_data(dataframe=df,  table_name= args.table_name, values=values, cur=cur, conn=conn)
     
+# args.file_path = "E:/E2E_DTP_Project/data/sales.csv"
+# args.host_name = "localhost"
+# args.user_name = "root"
+# args.database_name = "raw_data"
+# args.table_name = "sales"
