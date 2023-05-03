@@ -76,5 +76,5 @@ stock_level_agg =  df_agg(data= df_stock_levels , groupby_col= ['timestamp','pro
 df_stock_temp = read_data("E:/E2E_DTP_Project/data/sensor_storage_temperature.csv")
 df_stock_temp = convert_to_datetime(data = df_stock_temp, column = 'timestamp')
 df_stock_temp = convert_timestamp_to_hourly(data = df_stock_temp, column = 'timestamp' )
-df_stock_temp_agg =  df_agg(data= df_stock_temp , groupby_col= ['timestamp','id'], agg_col= 'temperature', agg_func ='mean')
+df_stock_temp_agg =  df_agg(data= df_stock_temp , groupby_col= ['timestamp'], agg_col= 'temperature', agg_func ='mean')
  

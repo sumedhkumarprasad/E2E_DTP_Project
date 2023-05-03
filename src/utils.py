@@ -180,14 +180,12 @@ def create_table_in_sql(database_name: str, table_name: str, coltype: str, cur: 
         cur.execute(f"CREATE TABLE {table_name} ({coltype})")
         cur.execute("SHOW TABLES")
         tables = cur.fetchall()
+        print(tables)
         logging.info('Created table in the databse')
         logging.info('Ended creating table in the databse')
     except Exception as e:
          logging.debug(e)
          
-    print(tables)
-    return table_name
-
 
 # Step 6
 def insert_data(dataframe: str, table_name: str, values: str, cur: str, conn: str):
@@ -220,9 +218,4 @@ def insert_data(dataframe: str, table_name: str, values: str, cur: str, conn: st
     cur.execute(f"SELECT * FROM {table_name}")
     myresult = cur.fetchall()
     print(len(myresult))
-
-def convert_to_datetime(data: pd.DataFrame = None, column: str = None):
-
-    dummy = data.copy()
-    dummy[column] = pd.to_datetime(dummy[column], format='%Y-%m-%d %H:%M:%S')
-    return dummy   
+    

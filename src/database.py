@@ -14,7 +14,7 @@ parser.add_argument('-user', '--user_name', type=str, help = "pass the user_name
 parser.add_argument('-db', '--create_db' , default = False ,type=bool, help="Create database or not", required= False) 
 parser.add_argument('-dbname', '--database_name', type=str, help = "pass the databse_name to connect", required = True)
 parser.add_argument('-f', '--file_path' , type=str, help="pass the input dataset", required= False) 
-
+parser.add_argument('-tname', '--table_name' , type=str, help="pass the input table name", required= False) 
 
 args = parser.parse_args()
 
@@ -39,6 +39,6 @@ else:
     df = read_data(filename= args.file_path)
     print(df.columns)
     coltype, values = python_df_to_sql_table(df)
-    database_name,table_name,col_type= create_table_in_sql(database_name= args.dbname, table_name=  args.tname, coltype=coltype, cur=cur)
+    create_table_in_sql(database_name= args.dbname, table_name=  args.tname, coltype=coltype, cur=cur)
     insert_data(dataframe=df, table_name= args.tname, values=values, cur=cur, conn=conn)
     
