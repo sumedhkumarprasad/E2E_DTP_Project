@@ -37,8 +37,8 @@ if args.create_db:
    
 else:
     df = read_data(filename= args.file_path)
-    df.columns
+    print(df.columns)
     coltype, values = python_df_to_sql_table(df)
-    create_table_in_sql(database_name= args.dbname, table_name=  args.tname, coltype=coltype, cur=cur)
+    database_name,table_name,col_type= create_table_in_sql(database_name= args.dbname, table_name=  args.tname, coltype=coltype, cur=cur)
     insert_data(dataframe=df, table_name= args.tname, values=values, cur=cur, conn=conn)
     

@@ -185,7 +185,8 @@ def create_table_in_sql(database_name: str, table_name: str, coltype: str, cur: 
     except Exception as e:
          logging.debug(e)
          
-    return tables
+    print(tables)
+    return table_name
 
 
 # Step 6
@@ -220,4 +221,8 @@ def insert_data(dataframe: str, table_name: str, values: str, cur: str, conn: st
     myresult = cur.fetchall()
     print(len(myresult))
 
-    
+def convert_to_datetime(data: pd.DataFrame = None, column: str = None):
+
+    dummy = data.copy()
+    dummy[column] = pd.to_datetime(dummy[column], format='%Y-%m-%d %H:%M:%S')
+    return dummy   
