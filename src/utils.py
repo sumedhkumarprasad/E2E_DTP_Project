@@ -73,10 +73,11 @@ def read_data(filename: str) -> pd.DataFrame:
         df.drop(columns = ['Unnamed: 0'], inplace = True, errors = 'ignore')
         logging.info("Read CSV File successfully!")
         logging.info('Ended reading csv format file')
+        return df
     except Exception as e:
         logging.debug(e)
         
-    return df
+    
 
 
 # # STEP 3 CREATE FUNCTION CREATE DATABASE - RETURNS DATABASES
