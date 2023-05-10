@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+\# -*- coding: utf-8 -*-
 """
 Created on Mon May  1 10:29:39 2023
 
@@ -65,16 +65,16 @@ df_sales = read_data("E:/E2E_DTP_Project/data/sales.csv")
 df_sales = convert_to_datetime(data = df_sales, column = 'timestamp')
 df_sales = convert_timestamp_to_hourly(data = df_sales, column = 'timestamp' )
 sale_agg =  df_agg(data= df_sales , groupby_col= ['timestamp','product_id'], agg_col= 'quantity', agg_func ='sum')
-
+sale_agg.to_csv("E:/E2E_DTP_Project/data/sales_agg.csv", index = False, header = True)
 
 df_stock_levels = read_data("E:/E2E_DTP_Project/data/sensor_stock_levels.csv")
 df_stock_levels = convert_to_datetime(data = df_stock_levels, column = 'timestamp')
 df_stock_levels = convert_timestamp_to_hourly(data = df_stock_levels, column = 'timestamp' )
 stock_level_agg =  df_agg(data= df_stock_levels , groupby_col= ['timestamp','product_id'], agg_col= 'estimated_stock_pct', agg_func ='mean')
-                      
+stock_level_agg.to_csv("E:/E2E_DTP_Project/data/stock_level_agg.csv", index = False, header = True)
 
 df_stock_temp = read_data("E:/E2E_DTP_Project/data/sensor_storage_temperature.csv")
 df_stock_temp = convert_to_datetime(data = df_stock_temp, column = 'timestamp')
 df_stock_temp = convert_timestamp_to_hourly(data = df_stock_temp, column = 'timestamp' )
 df_stock_temp_agg =  df_agg(data= df_stock_temp , groupby_col= ['timestamp'], agg_col= 'temperature', agg_func ='mean')
-  
+df_stock_temp_agg.to_csv("E:/E2E_DTP_Project/data/df_stock_temp_agg.csv", index = False, header = True)

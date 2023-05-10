@@ -26,6 +26,7 @@ conn, cur = connect_db(host= args.host_name, user= args.user_name)
 
 # step 2: read dataset
 
+
 if args.create_db:
      create_database(database_name= args.database_name, cur= cur)
    
@@ -36,8 +37,8 @@ else:
     create_table_in_sql(database_name= args.database_name, table_name=  args.table_name, coltype=coltype, cur=cur)
     insert_data(dataframe=df,  table_name= args.table_name, values=values, cur=cur, conn=conn)
     
-# args.file_path = "E:/E2E_DTP_Project/data/sales.csv"
-# args.host_name = "localhost"
-# args.user_name = "root"
-# args.database_name = "raw_data"
-# args.table_name = "sales"
+# args_file_path = "E:/E2E_DTP_Project/data/sales.csv"
+# args_host_name = "localhost"
+# args_user_name = "root"
+# args_database_name = "raw_data"
+# args_table_name = "sales_data"
