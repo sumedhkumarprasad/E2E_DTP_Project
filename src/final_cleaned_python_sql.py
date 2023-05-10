@@ -9,40 +9,43 @@ import logging
 import os
 from pathlib import Path
 from typing import List, Tuple
-import sqlite3
+
 import mysql.connector as mysql
 import pandas as pd
 from dotenv import load_dotenv
 import sys
+import boto3
+from io import StringIO
 
 env = Path("src/.env")
 load_dotenv(dotenv_path=env)
 
-def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, str]:
-    """this function connects to mysql database and returns conn, cur as tuple
+from src.utils import (connect_db)
+# def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, str]:
+#     """this function connects to mysql database and returns conn, cur as tuple
 
-    Args:
-        host (str): pass host name
-        user (str): pass user name
+#     Args:
+#         host (str): pass host name
+#         user (str): pass user name
 
-    Returns:
-        Tuple[mysql.connection.MySQLConnection, str]: 
-    """
-    try:
-        logging.info('Started MySQl Connection Started')
-        conn = mysql.connect(host=host,
-                            user=user,
-                            password=os.getenv("PASSWORD"))
-        cur = conn.cursor()
-        logging.info("Connected to MySQL successfully!")
-        logging.info('Ended MySQl Connection Started')
-    except Exception as e:
-        logging.debug(e)
-    return conn, cur
+#     Returns:
+#         Tuple[mysql.connection.MySQLConnection, str]: 
+#     """
+#     try:
+#         logging.info('Started MySQl Connection Started')
+#         conn = mysql.connect(host=host,
+#                             user=user,
+#                             password=os.getenv("PASSWORD"))
+#         cur = conn.cursor()
+#         logging.info("Connected to MySQL successfully!")
+#         logging.info('Ended MySQl Connection Started')
+#     except Exception as e:
+#         logging.debug(e)
+#     return conn, cur
 
 
 
-sql_path = "E:/E2E_DTP_Project/final_master_agg_cleaned_data.sql"
+sql_path = "src/final_master_agg_cleaned_data.sql"
 
 
 def execute_sql_script( file_path: str):
@@ -58,7 +61,8 @@ def execute_sql_script( file_path: str):
     # Fetch the result as a Pandas DataFrame
     result = cur.fetchall()
     df = pd.DataFrame(result, columns=cur.column_names)
-
+    
+    
     # Close the cursor and connection
     cur.close()
     conn.close()
@@ -68,3 +72,15 @@ def execute_sql_script( file_path: str):
 
 master_df = execute_sql_script( file_path = sql_path)
 master_df.head()
+
+master_df_copy = master_df
+
+csv_buffer = StringIO()
+master_df_copy.to_csv(csv_buffer, index=False)
+
+client = boto3.client('s3', aws_access_key_id=os.getenv("aws_access_key_id"),
+                          aws_secret_access_key=os.getenv("aws_secret_access_key"),
+                          region_name=os.getenv("region_name"))
+
+client.put_object(Bucket='e2e-dtp-project', Key='e2e_forcasting_project/final_master_agg_file.csv', Body=csv_buffer.getvalue())
+ 
