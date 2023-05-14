@@ -16,26 +16,8 @@ import pandas as pd
 from dotenv import load_dotenv
 import sys
 
-def read_data(filename: str) -> pd.DataFrame:
-    '''
-    Reads a CSV file and returns a pandas DataFrame.
+from src.utils import read_data
 
-    Parameters
-    ----------
-    filename : str
-    - file_path (str): The path to the CSV file.   
-
-    Returns
-    -------
-    df : TYPE
-        DESCRIPTION.
-    - pandas.DataFrame: A DataFrame containing the data from the CSV file.
-
-    '''
-    df = pd.read_csv(filename)
-    df.drop(columns = ['Unnamed: 0'], inplace = True, errors = 'ignore')
-       
-    return df
 
 def convert_to_datetime(data: pd.DataFrame = None, column: str = None):
 

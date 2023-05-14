@@ -38,6 +38,8 @@ def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, 
     Returns:
         Tuple[mysql.connection.MySQLConnection, str]: 
     """
+    env = Path(".env")
+    load_dotenv(dotenv_path=env)
     try:
         logging.info('Started MySQl Connection Started')
         conn = mysql.connect(host=host,
@@ -231,7 +233,7 @@ def authenticate_s3() -> Tuple[boto3.client, str]:
     Returns -- No return
     No Parameter pass
     '''
-    env = Path("src/.env")
+    env = Path(".env")
     load_dotenv(dotenv_path=env)
     try:
         logging.info('establish and authenticate_s3 through local python')

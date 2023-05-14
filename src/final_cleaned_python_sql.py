@@ -16,8 +16,7 @@ import sys
 import boto3
 from io import StringIO
 
-env = Path("src/.env")
-load_dotenv(dotenv_path=env)
+
 
 from src.utils import (connect_db,authenticate_s3,upload_to_s3,read_from_s3)
 
@@ -61,6 +60,4 @@ def process() -> pd.DataFrame:
     master_df = execute_sql_script(sql_script_file_path = sql_path_file_path)
     return upload_to_s3(df = master_df, filename = "sample_123456")
 
-
-process()
 
