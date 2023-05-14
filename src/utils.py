@@ -16,6 +16,8 @@ import mysql.connector as mysql
 import pandas as pd
 from dotenv import load_dotenv
 import sys
+import boto3
+from io import StringIO
 
 sys.dont_write_bytecode = True
 
@@ -220,6 +222,94 @@ def insert_data(dataframe: str, table_name: str, values: str, cur: str, conn: st
         print(len(myresult))
     except Exception as e:
         logging.debug(e)
+        
+
+        
+def authenticate_s3() -> Tuple[boto3.client, str]:
+    '''
+    This function will use the boto3 python library and establish aws s3 bcuket connection 
+    Returns -- No return
+    No Parameter pass
+    '''
+    env = Path("src/.env")
+    load_dotenv(dotenv_path=env)
+    try:
+        logging.info('establish and authenticate_s3 through local python')
+        client = boto3.client('s3', aws_access_key_id=os.getenv('access_key_id'), 
+                          aws_secret_access_key=os.getenv('secret_access_key'), 
+                          region_name=os.getenv('region'))
+        logging.info('connection established and authenticate_s3 through local python successfully')
+        logging.info('Ended establish and authenticate_s3 through local python')    
+        bucket_name = os.getenv('bucket_name')
+    except Exception as e:
+        logging.debug(e)
+    
+    # Return the S3 client and bucket name as a tuple
+    return client, bucket_name
+
+def upload_to_s3(df: pd.DataFrame, filename: str) -> bool:
+    '''
+    This function will first call the authenticate_s3() an then establsih the s3 connection with local python
+    
+    Parameters
+    ----------
+    df : final master dataset which needs to upload on s3 bucket
+    filename : give the file name which you want to save it.
+
+    Returns
+    -------
+    bool
+        DESCRIPTION.
+
+    '''
+    # Authenticate with AWS
+    client, bucket_name = authenticate_s3()
+
+    # Upload the file
+    try:
+        logging.info('Upload final dataframe to amaxzon s3 bucket starting ')
+        
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False)
+        client.put_object(
+           # ACL = 'private',
+            Body= csv_buffer.getvalue(),
+            Bucket = bucket_name,
+            Key = filename + '.csv'
+        )
+        
+    except Exception as e:
+        print(e)
+        return logging.info('Not successfully uploaded to s3 bucket ')
+    return logging.info('successfully uploaded final dataframe to amazon s3 bucket starting ')
+
+def read_from_s3(filename: str) -> pd.DataFrame:
+    
+    '''
+    Reading the file from s3 bucket
+
+    Parameters
+    ----------
+    filename : pass the filename of s3 bucket
+
+    Returns : pandas dataframe
+
+    '''
+    # Authenticate with AWS
+    client, bucket_name = authenticate_s3()
+
+    # Upload the file
+    try:
+        response = client.get_object(
+            Bucket = bucket_name,
+            Key=filename + '.csv')
+        
+        read_df = pd.read_csv(response['Body'])
+    except Exception as e:
+        print(e)
+        return False
+    return read_df 
+
         
    
     

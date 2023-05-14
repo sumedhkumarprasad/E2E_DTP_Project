@@ -9,7 +9,6 @@ import logging
 import os
 from pathlib import Path
 from typing import List, Tuple
-
 import mysql.connector as mysql
 import pandas as pd
 from dotenv import load_dotenv
@@ -20,38 +19,25 @@ from io import StringIO
 env = Path("src/.env")
 load_dotenv(dotenv_path=env)
 
-from src.utils import (connect_db)
-# def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, str]:
-#     """this function connects to mysql database and returns conn, cur as tuple
-
-#     Args:
-#         host (str): pass host name
-#         user (str): pass user name
-
-#     Returns:
-#         Tuple[mysql.connection.MySQLConnection, str]: 
-#     """
-#     try:
-#         logging.info('Started MySQl Connection Started')
-#         conn = mysql.connect(host=host,
-#                             user=user,
-#                             password=os.getenv("PASSWORD"))
-#         cur = conn.cursor()
-#         logging.info("Connected to MySQL successfully!")
-#         logging.info('Ended MySQl Connection Started')
-#     except Exception as e:
-#         logging.debug(e)
-#     return conn, cur
+from src.utils import (connect_db,authenticate_s3,upload_to_s3,read_from_s3)
 
 
+def execute_sql_script(sql_script_file_path: str) -> pd.DataFrame:
+    '''
+    This function is used for executing the SQl script from saved sql scripts
 
-sql_path = "src/final_master_agg_cleaned_data.sql"
+    Parameters
+    ----------
+    sql_script_file_path : str
+        DESCRIPTION.
 
+    Returns : Pandas dataframe will return
+    -------
 
-def execute_sql_script( file_path: str):
+    '''
     conn, cur = connect_db(host = "localhost", user = "root")
     # Read the SQL script from file
-    with open(file_path, 'r') as file:
+    with open(sql_script_file_path, 'r') as file:
         sql_script = file.read()
 
     # Establish a connection to the MySQL database
@@ -70,17 +56,11 @@ def execute_sql_script( file_path: str):
     # Return the result as a Pandas DataFrame
     return df
 
-master_df = execute_sql_script( file_path = sql_path)
-master_df.head()
+def process() -> pd.DataFrame:
+    sql_path_file_path = "src/final_master_agg_cleaned_data.sql"
+    master_df = execute_sql_script(sql_script_file_path = sql_path_file_path)
+    return upload_to_s3(df = master_df, filename = "sample_123456")
 
-master_df_copy = master_df
 
-csv_buffer = StringIO()
-master_df_copy.to_csv(csv_buffer, index=False)
+process()
 
-client = boto3.client('s3', aws_access_key_id=os.getenv("aws_access_key_id"),
-                          aws_secret_access_key=os.getenv("aws_secret_access_key"),
-                          region_name=os.getenv("region_name"))
-
-client.put_object(Bucket='e2e-dtp-project', Key='e2e_forcasting_project/final_master_agg_file.csv', Body=csv_buffer.getvalue())
- 
