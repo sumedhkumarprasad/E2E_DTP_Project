@@ -56,8 +56,15 @@ def execute_sql_script(sql_script_file_path: str) -> pd.DataFrame:
     return df
 
 def process() -> pd.DataFrame:
+    '''
+    This function will run the process step by step, does not take any input parameter 
+    first take the sql scripts file then run or execute the SQL scripts through function and output of that sql scripts 
+    needs to upload to amazon s3 bucket on the fly without sving the data into disk
+
+    Returns - Final pandas dataframe which will upload on the amazon s3 bucket
+    '''
     sql_path_file_path = "src/final_master_agg_cleaned_data.sql"
     master_df = execute_sql_script(sql_script_file_path = sql_path_file_path)
-    return upload_to_s3(df = master_df, filename = "sample_123456")
+    return upload_to_s3(df = master_df, filename = "final_master_agg_file")
 
 
