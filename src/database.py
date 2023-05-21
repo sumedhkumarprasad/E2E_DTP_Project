@@ -18,8 +18,6 @@ parser.add_argument('-tname', '--table_name' , type=str, help="pass the input ta
 
 args = parser.parse_args()
 
-env = Path("src/.env")
-load_dotenv(dotenv_path=env)
 
 # step 1: connect to database
 conn, cur = connect_db(host= args.host_name, user= args.user_name)

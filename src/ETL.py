@@ -16,26 +16,8 @@ import pandas as pd
 from dotenv import load_dotenv
 import sys
 
-def read_data(filename: str) -> pd.DataFrame:
-    '''
-    Reads a CSV file and returns a pandas DataFrame.
+from src.utils import read_data
 
-    Parameters
-    ----------
-    filename : str
-    - file_path (str): The path to the CSV file.   
-
-    Returns
-    -------
-    df : TYPE
-        DESCRIPTION.
-    - pandas.DataFrame: A DataFrame containing the data from the CSV file.
-
-    '''
-    df = pd.read_csv(filename)
-    df.drop(columns = ['Unnamed: 0'], inplace = True, errors = 'ignore')
-       
-    return df
 
 def convert_to_datetime(data: pd.DataFrame = None, column: str = None):
 
@@ -70,12 +52,11 @@ sale_agg.to_csv("E:/E2E_DTP_Project/data/sales_agg.csv", index = False, header =
 df_stock_levels = read_data("E:/E2E_DTP_Project/data/sensor_stock_levels.csv")
 df_stock_levels = convert_to_datetime(data = df_stock_levels, column = 'timestamp')
 df_stock_levels = convert_timestamp_to_hourly(data = df_stock_levels, column = 'timestamp' )
-stock_level_agg =  df_agg(data= df_stock_levels , groupby_col= ['timestamp','product_id'], agg_col= 'estimated_stock_pct', agg_func ='sum')
-stock_level_agg.to_csv("E:/E2E_DTP_Project/data/stock_level_agg.csv", index = False, header = True)                    
+stock_level_agg =  df_agg(data= df_stock_levels , groupby_col= ['timestamp','product_id'], agg_col= 'estimated_stock_pct', agg_func ='mean')
+stock_level_agg.to_csv("E:/E2E_DTP_Project/data/stock_level_agg.csv", index = False, header = True)
 
 df_stock_temp = read_data("E:/E2E_DTP_Project/data/sensor_storage_temperature.csv")
 df_stock_temp = convert_to_datetime(data = df_stock_temp, column = 'timestamp')
 df_stock_temp = convert_timestamp_to_hourly(data = df_stock_temp, column = 'timestamp' )
 df_stock_temp_agg =  df_agg(data= df_stock_temp , groupby_col= ['timestamp'], agg_col= 'temperature', agg_func ='mean')
 df_stock_temp_agg.to_csv("E:/E2E_DTP_Project/data/df_stock_temp_agg.csv", index = False, header = True)
- 
