@@ -2,7 +2,7 @@
 import pandas as  pd
 import numpy as np
 
-import pandas as pd
+
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import SelectFromModel
@@ -26,40 +26,71 @@ def missing_value_treatment(input_df: pd.DataFrame)  -> pd.DataFrame:
     print(null_columns)
 
     input_df['quantity'] =input_df['quantity'].fillna(input_df['quantity'].mean())
+    input_df = input_df.sort_values(by = "timestamp")
+    
+    input_df.reset_index(inplace=True)
+    input_df.drop('index', axis=1, inplace=True)
+    
+    input_df.set_index('timestamp',inplace = True)
     
     return input_df
 
-# treated_df = missing_value_treatment(input_df=df)
+# treated_df11 = missing_value_treatment(input_df=df)
 
 
     
 def model_train_func(treated_df : pd.DataFrame)  -> pd.DataFrame:
     
-    X = treated_df.drop(['estimated_stock_percent'], axis=1)  # Replace 'target_variable' with the name of your target variable column
-    y = treated_df['estimated_stock_percent']
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    cut_off_date = "2022-03-06 10:00:00"
+    
+    X_train, X_test = treated_df[:cut_off_date],treated_df[cut_off_date:]
+
+    X_train.reset_index(inplace=True)
+    X_test.reset_index(inplace=True)
+    
+    
+    y_train = pd.DataFrame(X_train['estimated_stock_percent'])
+    y_test =  pd.DataFrame(X_test['estimated_stock_percent'])
+     
+    X_train.drop('estimated_stock_percent', axis=1, inplace=True)
+    X_test.drop('estimated_stock_percent', axis=1, inplace=True)
+     
+     
     x_test_columns = X_test.columns
-    X_test_df = pd.DataFrame(X_test, columns=x_test_columns)
+    X_test_df = pd.DataFrame(X_test.copy(), columns=x_test_columns)
+     
+    x_train_columns = X_train.copy().columns
+    X_train_df = pd.DataFrame(X_train.copy(), columns = x_train_columns)
+    X_train_df['estimated_stock_percent'] = y_train
+    
+    X_train.drop('timestamp', axis=1, inplace=True)
+    X_test.drop('timestamp', axis=1, inplace=True)
+     
+    yy_train = y_train.copy().to_numpy().ravel() 
     regressor = RandomForestRegressor()
     scaler = StandardScaler()
     scaler.fit(X_train)
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
-    model_train= regressor.fit(X_train,y_train)
+     
+    model_train= regressor.fit(X_train,yy_train)
     
-    return X_train, X_test, y_train, y_test, model_train ,X_test_df
+    return X_train, X_test, y_train, y_test, model_train ,X_test_df,X_train_df
 
 
 
 def model_metrics(read_inital_data_df: pd.DataFrame)-> pd.DataFrame :
     treated_missing_df = missing_value_treatment(input_df= read_inital_data_df)
-    X_train, X_test, y_train, y_test, model_train ,X_test_df = model_train_func(treated_df = treated_missing_df)
+    X_train, X_test, y_train, y_test, model_train ,X_test_df,X_train_df  = model_train_func(treated_df = treated_missing_df)
     y_pred = model_train.predict(X_test)
     
     feature_importances = model_train.feature_importances_
-    importance_df = pd.DataFrame({'Feature': X_test_df.columns, 'Importance': feature_importances})
+    
+    X_test_df_columns = list(X_test_df.columns)
+    X_test_df_columns.remove('timestamp')
+    
+    importance_df = pd.DataFrame({'Feature': X_test_df_columns, 'Importance': feature_importances})
     importance_df = importance_df.sort_values(by='Importance',ascending=False)
-    X_test_df['y_test'] = y_test
     X_test_df['y_pred'] = y_pred 
     
     mse = mean_squared_error(y_test, y_pred)
@@ -72,27 +103,41 @@ def model_metrics(read_inital_data_df: pd.DataFrame)-> pd.DataFrame :
     print(f"RMSE: {rmse:.2f}")
     print(f"R-squared: {r2:.2f}")
     
-    return X_test_df,importance_df
+    metrics_data  = {
+    'Metric': ['Mean Squared Error', 'MAE', 'RMSE', 'R-squared'],
+    'Value': [mse, mae, rmse, r2]
+     }
+    
+    metrics_df = pd.DataFrame(metrics_data)
+    
+    return X_train_df,X_test_df,importance_df,metrics_df
 
+
+
+######################################################################
 def process():
         
-    final_prediction_df, feature_imp_df =  model_metrics(read_inital_data_df = df )
+    historical_df,final_prediction_df, feature_imp_df,metrics_df =  model_metrics(read_inital_data_df = df )
     
     category_col = final_prediction_df.columns[final_prediction_df.columns.str.startswith('category')]
-    
     category_col_split_series_test_dataset = final_prediction_df[category_col].idxmax(axis=1).str.split('_', expand=True)[1]
-    
     final_prediction_df.drop(category_col, axis=1, inplace=True)
     final_prediction_df['category'] = category_col_split_series_test_dataset
+    final_prediction_df = final_prediction_df.rename(columns={'y_pred': 'future_estimated_stock_percent'})
     
-    final_prediction_df['timestamp'] = pd.to_datetime({'year': final_prediction_df['year'],
-                                                    'month': final_prediction_df['month'],
-                                                    'day': final_prediction_df['day'],
-                                                    'hour': final_prediction_df['hour'] })
     
-    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df =final_prediction_df  , worksheet_name = "Sheet1")
-    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df =feature_imp_df  , worksheet_name = "Feature_Importance")
-
+    historical_category_col = historical_df.columns[historical_df.columns.str.startswith('category')]
+    historical_category_col_split_series_test_dataset = historical_df[category_col].idxmax(axis=1).str.split('_', expand=True)[1]
+    historical_df.drop(historical_category_col, axis=1, inplace=True)
+    historical_df['category'] = historical_category_col_split_series_test_dataset
+    historical_df = historical_df.rename(columns={'estimated_stock_percent': 'historical_estimated_stock_percent'})
+    
+    
+    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = historical_df  , worksheet_name = "Historical_Data")
+    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = final_prediction_df  , worksheet_name = "Future_Data")
+    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = feature_imp_df  , worksheet_name = "Feature_Importance")
+    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = metrics_df  , worksheet_name = "Model_Metrics")
+    
 process()
 
 ##################################################################################

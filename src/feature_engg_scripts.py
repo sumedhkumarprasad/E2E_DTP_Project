@@ -76,7 +76,7 @@ def feature_engg(features_selection_df : pd.DataFrame) -> pd.DataFrame:
     features_selection_df = pd.get_dummies(features_selection_df, columns=['category'], prefix='category')
     
     
-    features_selection_df.drop(['product_id','timestamp'], axis=1, inplace= True)
+    features_selection_df.drop(['product_id'], axis=1, inplace= True)
     #features_selection_df get dummies
     
     return features_selection_df
