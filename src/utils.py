@@ -18,6 +18,10 @@ from dotenv import load_dotenv
 import sys
 import boto3
 from io import StringIO
+from googleapiclient.discovery import build
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
+import pandas as pd
 
 sys.dont_write_bytecode = True
 
@@ -227,7 +231,7 @@ def insert_data(dataframe: str, table_name: str, values: str, cur: str, conn: st
         
 
         
-def authenticate_s3() -> Tuple[boto3.client, str]:
+def authenticate_s3(which_bucket : str) -> Tuple[boto3.client, str]:
     '''
     This function will use the boto3 python library and establish aws s3 bcuket connection 
     Returns -- No return
@@ -242,14 +246,14 @@ def authenticate_s3() -> Tuple[boto3.client, str]:
                           region_name=os.getenv('region'))
         logging.info('connection established and authenticate_s3 through local python successfully')
         logging.info('Ended establish and authenticate_s3 through local python')    
-        bucket_name = os.getenv('bucket_name')
+        bucket_name = os.getenv(str(which_bucket))
     except Exception as e:
         logging.debug(e)
     
     # Return the S3 client and bucket name as a tuple
     return client, bucket_name
 
-def upload_to_s3(df: pd.DataFrame, filename: str) -> bool:
+def upload_to_s3(df: pd.DataFrame, filename: str, which_bucket : str) -> bool:
     '''
     This function will first call the authenticate_s3() an then establsih the s3 connection with local python
     
@@ -265,7 +269,7 @@ def upload_to_s3(df: pd.DataFrame, filename: str) -> bool:
 
     '''
     # Authenticate with AWS
-    client, bucket_name = authenticate_s3()
+    client, bucket_name = authenticate_s3(which_bucket)
 
     # Upload the file
     try:
@@ -285,7 +289,7 @@ def upload_to_s3(df: pd.DataFrame, filename: str) -> bool:
         return logging.info('Not successfully uploaded to s3 bucket ')
     return logging.info('successfully uploaded final dataframe to amazon s3 bucket starting ')
 
-def read_from_s3(filename: str) -> pd.DataFrame:
+def read_from_s3(filename: str, which_bucket: str) -> pd.DataFrame:
     
     '''
     Reading the file from s3 bucket
@@ -298,7 +302,7 @@ def read_from_s3(filename: str) -> pd.DataFrame:
 
     '''
     # Authenticate with AWS
-    client, bucket_name = authenticate_s3()
+    client, bucket_name = authenticate_s3(which_bucket)
 
     # Upload the file
     try:
@@ -311,6 +315,77 @@ def read_from_s3(filename: str) -> pd.DataFrame:
         print(e)
         return False
     return read_df 
+
+def upload_to_googlesheet(g_excel_sheet_id: str, df: pd.DataFrame, worksheet_name: str) -> bool:
+    '''
+    This function is used to upload the python dataframe into the google sheet
+ 
+    Parameters
+    ----------
+    g_excel_sheet_id : str
+        Pass the google sheet id after creating the google sheet.
+    df : pd.DataFrame
+        python data frame which need to pass the python dataframe to the googlesheet.
+    worksheet_name : str
+        Pass the worksheet name by which new worksheet needs to be created
+
+    Returns
+    -------
+    bool
+        successfully updated or not in the google sheet.
+
+    '''
+    SCOPES = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive.file",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    
+    load_dotenv('.env')
+    
+    typee = os.getenv("TYPE")
+    project_id = os.getenv("PROJECT_ID")
+    private_key_id = os.getenv("PRIVATE_KEY_ID")
+    private_key = os.getenv("PRIVATE_KEY").replace("\\n", "\n")
+    client_email = os.getenv("CLIENT_EMAIL")
+    client_id = os.getenv("CLIENT_ID")
+    auth_uri = os.getenv("AUTH_URI")
+    token_uri = os.getenv("TOKEN_URI")
+    auth_provider_x509_cert_url = os.getenv("AUTH_PROVIDER_X509_CERT_URL")
+    client_x509_cert_url = os.getenv("CLIENT_X509_CERT_URL")
+    universe_domain = os.getenv("UNIVERSE_DOMAIN")
+
+    credentials = ServiceAccountCredentials.from_json_keyfile_dict({
+        "type": typee,
+        "project_id": project_id,
+        "private_key_id": private_key_id,
+        "private_key": private_key,
+        "client_email": client_email,
+        "client_id": client_id,
+        "auth_uri": auth_uri,
+        "token_uri": token_uri,
+        "auth_provider_x509_cert_url": auth_provider_x509_cert_url,
+        "client_x509_cert_url": client_x509_cert_url,
+        "universe_domain": universe_domain
+    }, scopes=SCOPES)
+
+    google_auth = gspread.authorize(credentials)
+
+    try:
+        spreadsheet = google_auth.open_by_key(g_excel_sheet_id).worksheet(worksheet_name) 
+    except gspread.exceptions.WorksheetNotFound:
+        spreadsheet = google_auth.open_by_key(g_excel_sheet_id).add_worksheet(title=worksheet_name, rows=1, cols=1)
+        
+
+    df = df.astype(str)
+    spreadsheet.clear()
+    cell_list = spreadsheet.update([df.columns.values.tolist()] + df.values.tolist())
+
+    if cell_list:
+        return True
+    else:
+        return False
 
         
    

@@ -65,6 +65,6 @@ def process() -> pd.DataFrame:
     '''
     sql_path_file_path = "src/final_master_agg_cleaned_data.sql"
     master_df = execute_sql_script(sql_script_file_path = sql_path_file_path)
-    return upload_to_s3(df = master_df, filename = "final_master_agg_file")
+    return upload_to_s3(df = master_df, filename = "final_master_agg_file",which_bucket = "raw_data_bucket_name")
 
-
+process()
