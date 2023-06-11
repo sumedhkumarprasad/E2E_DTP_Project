@@ -8,6 +8,7 @@ utils code
 """
 
 import logging
+import importlib
 import os
 from pathlib import Path
 from typing import List, Tuple
@@ -75,14 +76,10 @@ def read_data(filename: str) -> pd.DataFrame:
     - pandas.DataFrame: A DataFrame containing the data from the CSV file.
 
     '''
-    try:
-        logging.info('Started  reading csv format file')
-        df = pd.read_csv(filename)
-        df.drop(columns = ['Unnamed: 0'], inplace = True, errors = 'ignore')
-        logging.info("Read CSV File successfully!")
-        logging.info('Ended reading csv format file')
-    except Exception as e:
-        logging.debug(e)
+    # Load data from CSV file
+    df = pd.read_csv(filename)
+    # Drop the 'Unnamed: 0' column, if it exists
+    df.drop(columns = ['Unnamed: 0'], inplace = True, errors = 'ignore')
     return df
         
     
@@ -231,7 +228,7 @@ def insert_data(dataframe: str, table_name: str, values: str, cur: str, conn: st
         
 
         
-def authenticate_s3(which_bucket : str) -> Tuple[boto3.client, str]:
+def authenticate_s3() -> boto3.client:
     '''
     This function will use the boto3 python library and establish aws s3 bcuket connection 
     Returns -- No return
@@ -246,48 +243,50 @@ def authenticate_s3(which_bucket : str) -> Tuple[boto3.client, str]:
                           region_name=os.getenv('region'))
         logging.info('connection established and authenticate_s3 through local python successfully')
         logging.info('Ended establish and authenticate_s3 through local python')    
-        bucket_name = os.getenv(str(which_bucket))
     except Exception as e:
         logging.debug(e)
     
     # Return the S3 client and bucket name as a tuple
-    return client, bucket_name
+    return client
 
-def upload_to_s3(df: pd.DataFrame, filename: str, which_bucket : str) -> bool:
+def upload_to_s3(df: pd.DataFrame, filename: str, which_bucket: str) -> bool:
     '''
-    This function will first call the authenticate_s3() an then establsih the s3 connection with local python
+    This function will first call the authenticate_s3() and then establish the S3 connection with local Python.
     
     Parameters
     ----------
-    df : final master dataset which needs to upload on s3 bucket
-    filename : give the file name which you want to save it.
+    df : pd.DataFrame
+        Final master dataset to be uploaded to the S3 bucket.
+    filename : str
+        Name of the file to be saved.
+    which_bucket : str
+        Name of the S3 bucket to upload the file to.
 
     Returns
     -------
     bool
-        DESCRIPTION.
-
+        True if the upload is successful, False otherwise.
     '''
     # Authenticate with AWS
-    client, bucket_name = authenticate_s3(which_bucket)
+    client = authenticate_s3()
 
     # Upload the file
     try:
-        logging.info('Upload final dataframe to amaxzon s3 bucket starting ')
+        logging.info('Uploading final dataframe to Amazon S3 bucket...')
         
         csv_buffer = StringIO()
         df.to_csv(csv_buffer, index=False)
-        client.put_object(
-           # ACL = 'private',
-            Body= csv_buffer.getvalue(),
-            Bucket = bucket_name,
-            Key = filename + '.csv'
+        response = client.put_object(
+            ACL='private',
+            Body=csv_buffer.getvalue(),
+            Bucket=which_bucket,
+            Key=filename + '.csv'
         )
-        
+        logging.info('Successfully uploaded final dataframe to Amazon S3 bucket.')
+        return True
     except Exception as e:
-        print(e)
-        return logging.info('Not successfully uploaded to s3 bucket ')
-    return logging.info('successfully uploaded final dataframe to amazon s3 bucket starting ')
+        logging.error('Failed to upload to S3 bucket: ' + str(e))
+        return False
 
 def read_from_s3(filename: str, which_bucket: str) -> pd.DataFrame:
     
@@ -388,6 +387,15 @@ def upload_to_googlesheet(g_excel_sheet_id: str, df: pd.DataFrame, worksheet_nam
         return False
 
         
-   
+def process_task(task: str) -> dict:
+    """Import task file to process the data from src/tools folder
+    Args:
+        task (str): name of the task to process
+    Returns:
+        dict: processed_data
+    """
+    
+    lib = importlib.import_module(f"src.{task}")
+    return lib.process()   
     
 
