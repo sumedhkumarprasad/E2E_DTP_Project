@@ -3,16 +3,13 @@ import pandas as  pd
 import numpy as np
 
 
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import mean_squared_error, r2_score,mean_absolute_error
-from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
-from src.utils import (read_from_s3,read_data,upload_to_s3,authenticate_s3,upload_to_googlesheet)
+from src.utils import (read_from_s3)
 
 
-df = read_from_s3(filename = "final_feature_engg_master" , which_bucket = "processed_data_bucket_name" )
+df = read_from_s3(filename = "final_feature_engg_master", which_bucket = "end2enddsproject02" )
 
 def missing_value_treatment(input_df: pd.DataFrame)  -> pd.DataFrame:  
     
@@ -34,8 +31,6 @@ def missing_value_treatment(input_df: pd.DataFrame)  -> pd.DataFrame:
     input_df.set_index('timestamp',inplace = True)
     
     return input_df
-
-# treated_df11 = missing_value_treatment(input_df=df)
 
 
     
@@ -132,95 +127,10 @@ def process():
     historical_df['category'] = historical_category_col_split_series_test_dataset
     historical_df = historical_df.rename(columns={'estimated_stock_percent': 'historical_estimated_stock_percent'})
     
+    return historical_df, final_prediction_df, feature_imp_df, metrics_df
     
-    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = historical_df  , worksheet_name = "Historical_Data")
-    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = final_prediction_df  , worksheet_name = "Future_Data")
-    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = feature_imp_df  , worksheet_name = "Feature_Importance")
-    upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = metrics_df  , worksheet_name = "Model_Metrics")
     
-process()
-
-##################################################################################
-
-# final dataset = x_test+ y_test+y_pred
-#  product information 
-############################################################################################
-
-# # Calculate the correlation between features and target variable
-# correlation_values = X.apply(lambda feature: np.abs(np.corrcoef(feature, y)[0, 1]))
-# correlation_df = pd.DataFrame({'Feature': X.columns, 'Correlation': correlation_values})
-
-# # Sort the features by correlation in descending order
-# correlation_df.sort_values(by='Correlation', ascending=False, inplace=True)
-
-
-# threshold = 0.01  # Adjust the threshold as per your preference
-# selected_features = correlation_df.loc[correlation_df['Correlation'] > threshold, 'Feature'].tolist()
-
-# # Subset the data with selected features
-# X_selected = X[selected_features]
-
-# # Split the data into train and test sets
-# X_train, X_test, y_train, y_test = train_test_split(X_selected, y, test_size=0.3, random_state=42)
-
-# # Train the random forest regressor
-# regressor = RandomForestRegressor()
-# regressor.fit(X_train, y_train)
-
-# # Model evaluation
-# y_pred = regressor.predict(X_test)
-
-# mse = mean_squared_error(y_test, y_pred)
-# r2 = r2_score(y_test, y_pred)
-# rmse = np.sqrt(mse)
-
-# print(f"Mean Squared Error: {mse:.2f}")
-# print(f"RMSE: {rmse:.2f}")
-# print(f"R-squared: {r2:.2f}")
-
-##########################################################################################
-
-
-# Split the data into train and test sets
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-
-
-# feature_selector = SelectFromModel(RandomForestRegressor(n_estimators=100))
-# X_train_selected = feature_selector.fit_transform(X_train, y_train)
-# X_test_selected = feature_selector.transform(X_test)
-
-# # Hyperparameter tuning using GridSearchCV
-# param_grid = {
-#     'n_estimators': [100, 200, 300],
-#     'max_depth': [None, 5, 10],
-#     'min_samples_split': [2, 5, 10]
-# }
-# grid_search = GridSearchCV(RandomForestRegressor(), param_grid, cv=5)
-# grid_search.fit(X_train_selected, y_train)
-# best_model = grid_search.best_estimator_
-
-###########################################################################################
-
-
-# ##### Base Model #####
-# regressor = RandomForestRegressor()
-# scaler = StandardScaler()
-# scaler.fit(X_train)
-# X_train = scaler.transform(X_train)
-# X_test = scaler.transform(X_test)
-# model_train= regressor.fit(X_train,y_train)
-
-
-
-# Model evaluation
-# y_pred = model_train.predict(X_test)
-# mse = mean_squared_error(y_test, y_pred)
-# mae = mean_absolute_error(y_test,y_pred)
-# r2 = r2_score(y_test, y_pred)
-# rmse = np.sqrt(mse)
-
-# print(f"Mean Squared Error: {mse:.2f}")
-# print(f"MAE : {mae:.2f}")
-# print(f"RMSE: {rmse:.2f}")
-# print(f"R-squared: {r2:.2f}")
+    # upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = historical_df  , worksheet_name = "Historical_Data")
+    # upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = final_prediction_df  , worksheet_name = "Future_Data")
+    # upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = feature_imp_df  , worksheet_name = "Feature_Importance")
+    # upload_to_googlesheet(g_excel_sheet_id = "1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA", df = metrics_df  , worksheet_name = "Model_Metrics")

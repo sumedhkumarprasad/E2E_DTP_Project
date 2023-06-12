@@ -301,21 +301,17 @@ def read_from_s3(filename: str, which_bucket: str) -> pd.DataFrame:
 
     '''
     # Authenticate with AWS
-    client, bucket_name = authenticate_s3(which_bucket)
+    client = authenticate_s3()
 
     # Upload the file
     try:
-        response = client.get_object(
-            Bucket = bucket_name,
-            Key=filename + '.csv')
-        
+        response = client.get_object(Bucket = which_bucket, Key=filename + '.csv')
         read_df = pd.read_csv(response['Body'])
     except Exception as e:
-        print(e)
-        return False
+        raise Exception(f"Error reading file {filename} from S3: {str(e)}")
     return read_df 
 
-def upload_to_googlesheet(g_excel_sheet_id: str, df: pd.DataFrame, worksheet_name: str) -> bool:
+def upload_to_googlesheet(df: pd.DataFrame, g_excel_sheet_id: str, worksheet_name: str, filename: str) -> bool:
     '''
     This function is used to upload the python dataframe into the google sheet
  
@@ -372,14 +368,21 @@ def upload_to_googlesheet(g_excel_sheet_id: str, df: pd.DataFrame, worksheet_nam
     google_auth = gspread.authorize(credentials)
 
     try:
-        spreadsheet = google_auth.open_by_key(g_excel_sheet_id).worksheet(worksheet_name) 
+        spreadsheet = google_auth.open_by_key(g_excel_sheet_id)
+        worksheet = spreadsheet.worksheet(worksheet_name)
     except gspread.exceptions.WorksheetNotFound:
-        spreadsheet = google_auth.open_by_key(g_excel_sheet_id).add_worksheet(title=worksheet_name, rows=1, cols=1)
-        
-
+        worksheet = spreadsheet.add_worksheet(title=worksheet_name, rows=1, cols=1)
+    
+     # Check if the worksheet already exists with the provided name
+    if worksheet.title == worksheet_name:
+        # Clear the existing worksheet
+        worksheet.clear()
+    else:
+        # Rename the worksheet to the provided filename
+        worksheet.update_title(filename)
+    
     df = df.astype(str)
-    spreadsheet.clear()
-    cell_list = spreadsheet.update([df.columns.values.tolist()] + df.values.tolist())
+    cell_list = worksheet.update([df.columns.values.tolist()] + df.values.tolist())
 
     if cell_list:
         return True

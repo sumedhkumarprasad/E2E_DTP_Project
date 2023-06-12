@@ -36,16 +36,20 @@ final_cleaned_python_sql:
         bucket: ds-project-demo1
         filename: processed_data
 
-Model_building:
+feature_engg_scripts:
   export:
     - export:
         host: s3
-        bucket: end2enddsproject
-        filename2: ml_output
+        bucket: end2enddsproject02
+        filename2: final_feature_engg_master
 
-modeling_final:
+Model_building:
   export:
     - export:
         host: gsheet
         spread_sheet_id: 1mHw-uzkqThGeNJvnJt6L1fcwTddBc5cJ5Xo0ib5gdHk
         worksheet_name: Sheet1
+        filename1: historical_data
+        filename2: final_prediction_data
+        filename3: feature_importance_data
+        filename4: metrics_df
