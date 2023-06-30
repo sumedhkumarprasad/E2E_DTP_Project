@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from src.utils import (read_from_s3)
 
 
-df = read_from_s3(filename = "final_feature_engg_master", which_bucket = "end2enddsproject02" )
+df = read_from_s3(filename = "final_feature_engg_master", which_bucket = "e2e-dtp-project" )
 
 def missing_value_treatment(input_df: pd.DataFrame)  -> pd.DataFrame:  
     
