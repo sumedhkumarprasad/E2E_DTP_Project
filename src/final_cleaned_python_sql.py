@@ -5,20 +5,11 @@ Created on Sat May  6 14:35:34 2023
 @author: Sumedh Prasad
 """
 
-import logging
-import os
-from pathlib import Path
-from typing import List, Tuple
 import mysql.connector as mysql
 import pandas as pd
-from dotenv import load_dotenv
-import sys
-import boto3
-from io import StringIO
+from pathlib import Path
 
-
-
-from src.utils import (connect_db,authenticate_s3,upload_to_s3,read_from_s3)
+from src.utils import (connect_db)
 
 
 def execute_sql_script(sql_script_file_path: str) -> pd.DataFrame:
@@ -63,8 +54,8 @@ def process() -> pd.DataFrame:
 
     Returns - Final pandas dataframe which will upload on the amazon s3 bucket
     '''
-    sql_path_file_path = "src/final_master_agg_cleaned_data.sql"
+    sql_path_file_path = Path("src/final_master_agg_cleaned_data.sql")
     master_df = execute_sql_script(sql_script_file_path = sql_path_file_path)
-    return upload_to_s3(df = master_df, filename = "final_master_agg_file",which_bucket = "raw_data_bucket_name")
+    return master_df
 
-process()
+
