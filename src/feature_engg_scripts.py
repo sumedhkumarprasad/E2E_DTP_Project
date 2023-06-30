@@ -30,7 +30,7 @@ def features_selection(data_s3: pd.DataFrame) -> pd.DataFrame:
         inplace=True)
     
     # df_sales = read_data("E:/E2E_DTP_Project/data/sales.csv") # read_function
-    df_sales = read_from_s3(filename = 'sales',which_bucket= "ds-project-demo1")
+    df_sales = read_from_s3(filename = 'sales',which_bucket= "e2e-dtp-project")
     
     distinct_df_sales = df_sales.drop_duplicates(subset=['transaction_id', 'timestamp', 
                                                          'product_id', 'category',
@@ -94,9 +94,9 @@ def process() -> pd.DataFrame:
     feature_engg_final_df : final pandas dataframe which needs to upload on amazon s3 bucket
 
     '''
-    df_master = read_from_s3(filename = 'processed_data', which_bucket= "ds-project-demo1")
+    df_master = read_from_s3(filename = 'processed_data', which_bucket= "e2e-dtp-project")
     sales_df = read_data("data/sales.csv")
-    upload_to_s3(df = sales_df, filename = "sales", which_bucket = "ds-project-demo1")
+    upload_to_s3(df = sales_df, filename = "sales", which_bucket = "final-data-model")
 
     feature_df = features_selection(data_s3 = df_master)
     feature_engg_final_df = feature_engg(feature_df)
