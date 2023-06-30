@@ -19,8 +19,8 @@ python src/database.py -host 'localhost' -user 'root' -dbname 'processed_data' -
 
 # train and evaluate machine learning models
 echo "Extracting data & uploading to S3......."
-python3 main.py -t final_cleaned_python_sql
-python3 main.py -t feature_engg_scripts
+python main.py -t final_cleaned_python_sql
+python main.py -t feature_engg_scripts
 
 echo "Running modelling & uploading to gsheet......."
-python3 main.py -t Model_building
+python main.py -t Model_building
