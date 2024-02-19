@@ -20,7 +20,7 @@ import pytest
 
 sys.dont_write_bytecode = True
 
-from src.utils import (connect_db,read_data,authenticate_s3)
+from utils import (connect_db,read_data,authenticate_s3)
 
 
 
