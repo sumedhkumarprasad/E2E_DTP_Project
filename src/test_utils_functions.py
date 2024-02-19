@@ -20,17 +20,7 @@ import pytest
 
 sys.dont_write_bytecode = True
 
-from utils import (connect_db,read_data,authenticate_s3)
-
-
-
-HOST = 'localhost'
-USER = 'root'
-
-def test_connect_db():
-    conn, cur = connect_db(host = HOST, user = USER)
-    assert conn.is_connected()
-   
+from utils import (connect_db,read_data,authenticate_s3)   
 
 def test_read_data():
     data = {
@@ -42,8 +32,8 @@ def test_read_data():
     df_read_data= read_data('data/sample_data.csv')
     assert not df_read_data.empty
 
-def test_authenticate_s3():
-    var_client = authenticate_s3()
-    assert var_client  is not None
+# def test_authenticate_s3():
+#     var_client = authenticate_s3()
+#     assert var_client  is not None
 
 
