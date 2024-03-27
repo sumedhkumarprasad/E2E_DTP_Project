@@ -33,7 +33,7 @@ logging.basicConfig(filename='myapp.log',
 
 
 # STEP 1
-def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, str]:
+def connect_db(host: str, user: str, password: str) -> Tuple[mysql.connection.MySQLConnection, str]:
     """this function connects to mysql database and returns conn, cur as tuple
 
     Args:
@@ -49,7 +49,7 @@ def connect_db(host: str, user: str) -> Tuple[mysql.connection.MySQLConnection, 
         logging.info('Started MySQl Connection Started')
         conn = mysql.connect(host=host,
                             user=user,
-                            password=os.getenv("PASSWORD"))
+                            password=password)
         cur = conn.cursor()
         logging.info("Connected to MySQL successfully!")
         logging.info('Ended MySQl Connection Started')
