@@ -1,0 +1,35 @@
+name: Python automation github actions sample learning
+run-name: ${{github.actor}} started the job
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9.13' 
+
+    - name: Create virtual environment
+      run: |
+         python3.9 -m venv envgit
+
+    - name: Install dependencies
+      run: |
+        source envgit/bin/activate
+        pip install -r requirements.txt  
+
+    - name: Install pytest
+      run: |
+        source envgit/bin/activate
+        pip install pytest
+
+    - name: Run tests
+      run: |
+        source envgit/bin/activate
+        pytest src/test_utils_functions.py -v

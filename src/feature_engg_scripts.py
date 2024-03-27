@@ -1,6 +1,6 @@
 
 import pandas as pd
-from src.utils import (read_from_s3,read_data,upload_to_s3,authenticate_s3)
+from src.utils import (read_from_s3,read_data,upload_to_s3)
 
 
 def features_selection(data_s3: pd.DataFrame) -> pd.DataFrame:
@@ -30,7 +30,7 @@ def features_selection(data_s3: pd.DataFrame) -> pd.DataFrame:
         inplace=True)
     
     # df_sales = read_data("E:/E2E_DTP_Project/data/sales.csv") # read_function
-    df_sales = read_from_s3(filename = 'sales',which_bucket= "raw_data_bucket_name")
+    df_sales = read_from_s3(filename = 'sales',which_bucket= "e2e-dtp-project")
     
     distinct_df_sales = df_sales.drop_duplicates(subset=['transaction_id', 'timestamp', 
                                                          'product_id', 'category',
@@ -94,15 +94,14 @@ def process() -> pd.DataFrame:
     feature_engg_final_df : final pandas dataframe which needs to upload on amazon s3 bucket
 
     '''
-    df_master = read_from_s3(filename = 'final_master_agg_file',which_bucket= "raw_data_bucket_name")
-    df_master.head()
-    upload_to_s3(df = read_data("E:/E2E_DTP_Project/data/sales.csv"), filename = "sales",which_bucket = "raw_data_bucket_name")
+    df_master = read_from_s3(filename = 'processed_data', which_bucket= "e2e-dtp-project")
+    sales_df = read_data("data/sales.csv")
+    upload_to_s3(df = sales_df, filename = "sales", which_bucket = "final-data-model")
 
     feature_df = features_selection(data_s3 = df_master)
     feature_engg_final_df = feature_engg(feature_df)
-    return upload_to_s3(df = feature_engg_final_df, filename= 'final_feature_engg_master', which_bucket= "processed_data_bucket_name" )
+    return feature_engg_final_df
 
-process()
 
 
    

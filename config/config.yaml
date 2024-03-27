@@ -1,0 +1,55 @@
+---
+upload-to-database:
+  import:
+    - import:
+        dirpath: ./data/
+        file_extension: csv 
+        prefix_filename: sales
+    - import:
+        dirpath: ./data/
+        file_extension: csv 
+        prefix_filename: sensor_stock_levels
+    - import:
+        dirpath: ./data/
+        file_extension: csv 
+        prefix_filename: sensor_storage_temperature
+
+cleaned-upload-to-database:
+  import:
+    - import:
+        dirpath: ./data/
+        file_extension: csv 
+        prefix_filename: sales_agg
+    - import:
+        dirpath: ./data/
+        file_extension: csv 
+        prefix_filename: stock_level_agg
+    - import:
+        dirpath: ./data/
+        file_extension: csv 
+        prefix_filename: df_stock_temp_agg
+
+final_cleaned_python_sql:
+  export:
+    - export:
+        host: s3
+        bucket: e2e-dtp-project
+        filename: processed_data
+
+feature_engg_scripts:
+  export:
+    - export:
+        host: s3
+        bucket: final-data-model
+        filename2: final_feature_engg_master
+
+Model_building:
+  export:
+    - export:
+        host: gsheet
+        spread_sheet_id: 1eqjRxxBI45A7CqjQ_D3UQCRTJyI7hujh4_Q3kXFeidA
+        worksheet_name: Sheet1
+        filename1: historical_data
+        filename2: final_prediction_data
+        filename3: feature_importance_data
+        filename4: metrics_df
